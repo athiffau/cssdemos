@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Compiler Value="/home/family/Lazarus/Trunk/fpc/bin/x86_64-linux/fpc.sh" Date="1587092421"/>
+  <Params Value=" -Px86_64 -MObjFPC -Scghi -Cg -O1 -g -gl -gh -l -vewnhibq -Fi/home/family/Documents/Lazarus/Components/CSSDraw/demo/dashboard/lib/x86_64-linux -Fu/home/family/Lazarus/Trunk/lazarus/lcl/units/x86_64-linux/gtk2 -Fu/home/family/Documents/Lazarus/Components/CSSDraw/csscontrols-dev/lib/x86_64-linux -Fu/home/family/Lazarus/Trunk/lazarus/lcl/units/x86_64-linux -Fu/home/family/Lazarus/Trunk/lazarus/components/lazutils/lib/x86_64-linux -Fu/home/family/Lazarus/Trunk/lazarus/packager/units/x86_64-linux -Fu/home/family/Documents/Lazarus/Components/CSSDraw/demo/dashboard/ -FU/home/family/Documents/Lazarus/Components/CSSDraw/demo/dashboard/lib/x86_64-linux/ -FE/home/family/Documents/Lazarus/Components/CSSDraw/demo/dashboard/ -o/home/family/Documents/Lazarus/Components/CSSDraw/demo/dashboard/bootstrap -dLCL -dLCLgtk2 bootstrap.lpr"/>
+  <Complete Value="False"/>
+</CONFIG>
