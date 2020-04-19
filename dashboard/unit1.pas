@@ -16,16 +16,19 @@ type
     Button2: TButton;
     Button3: TButton;
     Button4: TButton;
+    Button5: TButton;
     MenuScrollBox: TScrollBox;
     Panel1: TPanel;
     HomeScrollBox: TScrollBox;
     procedure Button1Click(Sender: TObject);
     procedure Button2Click(Sender: TObject);
     procedure Button4Click(Sender: TObject);
+    procedure Button5Click(Sender: TObject);
     procedure FormCreate(Sender: TObject);
 
     procedure OnItemClick(Sender: TObject);
   private
+    FCSS: TCSSStyleSheet;
     procedure PanelIn(Sender: TObject);
     procedure PanelOut(Sender: TObject);
   public
@@ -52,7 +55,7 @@ procedure TForm1.FormCreate(Sender: TObject);
     Item.AutoSize := True;
     Item.Body.InlineStyle := 'color:rgb(173, 181, 189);margin-bottom:10px;';
     Item.Body.OnClick := @Button2Click;
-    Item.Body.AddNode( HTMLFa('font:30px;margin-left:20px;color:#47BAC1;', 'f1cb').SetHover('color:red;'));  // main icon
+    Item.Body.AddNode( HTMLFa('font:15px;margin-left:20px;color:#47BAC1;', 'f1cb').SetHover('color:red;'));  // main icon
     Item.Body.AddNode( HTMLSpan('font:18px;color:white; padding:15px 10px; padding-right:0px;', 'AppStack')); // app name
     Item.Body.AddNode( HTMLSpan('display:inline-block;font:9px;margin-left:20px;margin-top:20px;', 'Main'));               // main text
     Item.Top := 0;
@@ -69,13 +72,17 @@ procedure TForm1.FormCreate(Sender: TObject);
     Item := TCSSShape.Create(Self);
     Item.Align := alTop;
     Item.AutoSize := True;
+    Item.Body.StyleSheet := FCSS;
     // create "section" header
-    header := THtmlNode.Create('color:rgb(173, 181, 189);cursor:pointer;').SetHover('background-color:#2D3646; color:#e9ecef;').SetOnClick(@OnItemClick);
-    header.Id := AName;
+    header := THtmlNode.Create('')
+//      .SetHover('background-color:#2D3646; color:#e9ecef;')
+      .SetOnClick(@OnItemClick)
+      .SetClass('side-btn');
+    header.id := 'header';
     if AIcon = '' then AIcon := 'f2b9';
-    header.AddNode( HTMLFa('font:18px;padding-left:20px;cursor:move;', AIcon));             // left category icon
+    header.AddNode( HTMLFa('font:10px;padding-left:20px;cursor:move;', AIcon));             // left category icon
     header.AddNode( HTMLSpan('font:10px; padding:15px 10px; padding-right:0px;', AName));   // category caption
-    header.AddNode( HTMLFa('font:15px;', 'f107'));                                          // drop down icon
+    header.AddNode( HTMLFa('font:10px;', 'f107'));                                          // drop down icon
 
     // some random badges for section
     if MenuScrollBox.ControlCount mod 4 = 0 then header.AddNode( HTMLSpan('font:7px;font-weight:bold;margin-left:10px; padding:2px 5px; color:white; background-color:#47BAC1', 'New'))
@@ -83,19 +90,44 @@ procedure TForm1.FormCreate(Sender: TObject);
     if MenuScrollBox.ControlCount mod 3 = 0 then  header.AddNode( HTMLSpan('font:7px;margin-left:10px; padding:2px 5px; color:white; background-color:#A180DA', 'Special'));
 
     // sub items for section
-    container := THtmlNode.Create('display:none');
+    container := THtmlNode.Create('').SetClass('collapsed');
     container.Id := 'container';
       for I := 0 to Random(6) do  begin
         node := THtmlNode.Create('').SetHover('background-color:white;color:red');
+        node.id := 'node';
         node.AddNode( HTMLSpan('color:rgb(173, 181, 189); padding:5px 0px 5px 50px;', 'Sub item ' + I.ToString));
         container.AddNode( node);
       end;
     Item.Body.AddNode( header);
     Item.Body.AddNode( container);
+    Item.Body.ApplyStyles;
     Item.Parent := MenuScrollBox;
     Item.Top :=  1000 + MenuScrollBox.ControlCount;
   end;
 begin
+  FCSS := TCSSStyleSheet.Create(Self);
+  FCSS.Style := '.collapsed {display:none;} .expanded {display:block;} ' +  // for left sidebar
+    '.btn {margin:10px; padding:5px 10px; cursor:pointer; color:white;}' +  // basic btn style
+    '.btn:hover {padding: 8px 13px;}' +                                     // expand padding when btn is hovered
+    '.btn-lg {font:20px;}' +                                                // make larger buttons
+    '.btn-sm {font:7px;}' +                                                 // make smaller buttons
+
+    '.btn-group {border:2px solid black; border-right:0px solid green; margin:0px;}' +     // remove margins when button is in group
+    '.btn-group:last-child {border-right:2px solid black;}' +                              // for last child in group add right border
+    '.btn-group:hover {border:2px solid black;}'  +                                        // add "full frame" for hovered btn in group
+
+    '.btn-primary {background-color: #007BFF;} .btn-primary:hover {background-color: #0069D9;}' +
+    '.btn-secondary {background-color: #6C757D;} .btn-secondary:hover {background-color: red;}' +
+    '.btn-success {background-color: #28A745;}' +
+    '.btn-danger {background-color: #DC3545;}' +
+    '.btn-warning {background-color: #FFC107;}' +
+
+    '.side-btn {color:rgb(173, 181, 189);cursor:pointer;}' +                     // side main item
+    '.side-btn:hover {background-color: #2D3646; color: #e9ecef;}' +
+
+    '.side-btn-active {color:rgb(0, 181, 189)}' +                                // change color for active side item
+//    '.side-btn-active:hover {background-color: red; color: #e9ecef;}' +
+    '';
   AddLogo;
   AddItem('Dashboard', 'f080');
   AddItem('Pages','f0f6');
@@ -120,15 +152,14 @@ var
   Node: THtmlNode;
 begin
   Node := THtmlNode(Sender);  // this is 'header' node
-  Node := Node.GetNext(Node); // next sibling is 'container' (see AddItem in FormCreate) with "display:none"
-  if Node.CompStyle.Display = cdtBlock then       // change current computed style
-    Node.CompStyle.Display := cdtNone
-  else
-    Node.CompStyle.Display := cdtBlock;
-  Node.Style.Display := Node.CompStyle.Display;   // change "default" style (after no more :hover)
+  Node.ClassList.Toggle('side-btn-active');
+  Node.ApplyStyle;
+  Node := Node.GetNext(Node); // next sibling is 'container' (see AddItem in FormCreate)
+  Node.ClassList.Toggle('expanded');
+  Node.ApplyStyle;
+
   TCSSShape(Node.RootNode.ParentControl).Changed; // relayout and repaint
 end;
-
 
 procedure TForm1.PanelIn(Sender: TObject);
 begin
@@ -184,6 +215,60 @@ begin
   Invalidate;
 end;
 
+procedure TForm1.Button5Click(Sender: TObject);
+var
+  sh: TCSSShape;
+  container: THtmlNode;
+begin
+  sh := TCSSShape.Create(Self);
+  sh.AutoSize := True;
+  sh.Top := 0;
+  sh.Align := alTop;
+  sh.Body.InlineStyle := 'margin:10px;';
+  sh.Body.StyleSheet := FCSS;
+
+  sh.Body.AddNode( HTMLSpan('display:block;font:20px;','Standard'));
+  sh.Body.AddNode( HTMLSpan('','Primary').SetClass('btn btn-primary'));
+  sh.Body.AddNode( HTMLSpan('','Secondary').SetClass('btn btn-secondary'));
+  sh.Body.AddNode( HTMLSpan('','Success').SetClass('btn btn-success'));
+  sh.Body.AddNode( HTMLSpan('','Danger').SetClass('btn btn-danger'));
+  sh.Body.AddNode( HTMLSpan('','Warning').SetClass('btn btn-warning'));
+
+  sh.Body.AddNode( HTMLSpan('display:block;font: 20px;','Big with icon'));
+  sh.Body.AddNode( HTMLSpan('','').SetClass('btn btn-primary btn-lg')
+    .AddNode( HTMLFa('margin-right:10px;', 'f084'))
+    .AddNode( HTMLSpan('', 'Primary'))
+  );
+  sh.Body.AddNode( HTMLSpan('','').SetClass('btn btn-secondary btn-lg')
+    .AddNode( HTMLFa('margin-right:10px;', 'f0f6'))
+    .AddNode( HTMLSpan('', 'Secondary'))
+  );
+  sh.Body.AddNode( HTMLSpan('','Success').SetClass('btn btn-success btn-lg'));
+  sh.Body.AddNode( HTMLSpan('','Danger').SetClass('btn btn-danger btn-lg'));
+  sh.Body.AddNode( HTMLSpan('','Warning').SetClass('btn btn-warning btn-lg'));
+  sh.Body.AddNode( HTMLSpan('display:block;',''));
+
+  sh.Body.AddNode( HTMLSpan('display:block;font:20px;','Small'));
+  sh.Body.AddNode( HTMLSpan('','Primary').SetClass('btn btn-primary btn-sm'));
+  sh.Body.AddNode( HTMLSpan('','Secondary').SetClass('btn btn-secondary btn-sm'));
+  sh.Body.AddNode( HTMLSpan('','Success').SetClass('btn btn-success btn-sm'));
+  sh.Body.AddNode( HTMLSpan('','Danger').SetClass('btn btn-danger btn-sm'));
+  sh.Body.AddNode( HTMLSpan('','Warning').SetClass('btn btn-warning btn-sm'));
+  sh.Body.AddNode( HTMLSpan('display:block;',''));
+
+  sh.Body.AddNode( HTMLSpan('display:block;font:20px;','Group'));
+  container := THtmlNode.Create('');
+  container.AddNode( HTMLSpan('','Primary').SetClass('btn btn-group btn-primary'));
+  container.AddNode( HTMLSpan('','Secondary').SetClass('btn btn-group btn-secondary'));
+  container.AddNode( HTMLSpan('','Success').SetClass('btn btn-group btn-success'));
+  container.AddNode( HTMLSpan('','Danger').SetClass('btn btn-group btn-danger'));
+  container.AddNode( HTMLSpan('','Warning').SetClass('btn btn-group btn-warning'));
+  sh.Body.AddNode(container);
+
+  sh.Body.ApplyStyles;
+  sh.Parent := HomeScrollBox;
+end;
+
 procedure TForm1.Button1Click(Sender: TObject);
 var
   sh: TCSSShape;
@@ -196,7 +281,7 @@ var
     container.Id := 'container';
       icon := THtmlNode.Create('display:inline-block;');
       icon.Id := 'icon';
-      icon.AddNode( HTMLFa('font:40px;padding:10px;color:'+AIconColor+';', AIcon, 'faicon'));
+      icon.AddNode( HTMLFa('font:32px;padding:10px;color:'+AIconColor+';', AIcon, 'faicon'));
       body := THtmlNode.Create('display:inline-block;');
       body.AddNode( HTMLSpan('display:block;font:20px;color:black;', AValue));
       body.AddNode( HTMLSpan('font:10px;color:rgb(73, 80, 87);', AText));
